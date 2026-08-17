@@ -1,0 +1,1 @@
+# AetherAI Schemas Package

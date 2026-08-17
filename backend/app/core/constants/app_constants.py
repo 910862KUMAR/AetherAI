@@ -1,0 +1,27 @@
+APP_NAME = "AetherAI"
+
+APP_VERSION = "1.0.0"
+
+API_VERSION = "v1"
+
+API_PREFIX = "/api/v1"
+
+DEFAULT_TIMEZONE = "Asia/Kolkata"
+
+DEFAULT_PAGE_SIZE = 20
+
+MAX_PAGE_SIZE = 100
+
+DEFAULT_EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
+
+DEFAULT_LLM_MODEL = "llama-3.3-70b-versatile"
+
+HEALTHY_STATUS = "healthy"
+
+UNHEALTHY_STATUS = "unhealthy"
+
+CHAT_HISTORY_LIMIT = 20
+
+DOCUMENT_NAMESPACE = "documents"
+
+VECTOR_COLLECTION = "aetherai_documents"
