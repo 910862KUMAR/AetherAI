@@ -5,16 +5,24 @@ class VectorStoreService:
 
     COLLECTION_NAME = "aetherai_documents"
 
-    _client = chromadb.PersistentClient(
-        path="./chroma_db"
-    )
+    _client = None
+    _collection = None
 
-    _collection = _client.get_or_create_collection(
-        name=COLLECTION_NAME,
-        metadata={
-            "hnsw:space": "cosine",
-        },
-    )
+    @classmethod
+    def _get_collection(cls):
+        if cls._collection is None:
+            cls._client = chromadb.PersistentClient(
+                path="./chroma_db"
+            )
+
+            cls._collection = cls._client.get_or_create_collection(
+                name=cls.COLLECTION_NAME,
+                metadata={
+                    "hnsw:space": "cosine",
+                },
+            )
+
+        return cls._collection
 
     @classmethod
     def add_documents(
@@ -24,9 +32,10 @@ class VectorStoreService:
         document_id: str,
         user_id: str,
     ):
-
         if not chunks:
             return
+
+        collection = cls._get_collection()
 
         ids = [
             f"{document_id}_chunk_{index}"
@@ -42,7 +51,7 @@ class VectorStoreService:
             for index in range(len(chunks))
         ]
 
-        cls._collection.add(
+        collection.add(
             ids=ids,
             documents=chunks,
             embeddings=embeddings,
@@ -56,8 +65,9 @@ class VectorStoreService:
         user_id: str,
         top_k: int = 5,
     ):
+        collection = cls._get_collection()
 
-        return cls._collection.query(
+        return collection.query(
             query_embeddings=[query_embedding],
             n_results=top_k,
             where={
@@ -70,8 +80,9 @@ class VectorStoreService:
         cls,
         document_id: str,
     ):
+        collection = cls._get_collection()
 
-        cls._collection.delete(
+        collection.delete(
             where={
                 "document_id": document_id,
             }

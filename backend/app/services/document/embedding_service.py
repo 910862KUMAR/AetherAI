@@ -5,7 +5,13 @@ class EmbeddingService:
 
     MODEL_NAME = "all-MiniLM-L6-v2"
 
-    _model = SentenceTransformer(MODEL_NAME)
+    _model = None
+
+    @classmethod
+    def _get_model(cls) -> SentenceTransformer:
+        if cls._model is None:
+            cls._model = SentenceTransformer(cls.MODEL_NAME)
+        return cls._model
 
     @classmethod
     def generate_embeddings(
@@ -16,7 +22,9 @@ class EmbeddingService:
         if not texts:
             return []
 
-        embeddings = cls._model.encode(
+        model = cls._get_model()
+
+        embeddings = model.encode(
             texts,
             normalize_embeddings=True,
         )
