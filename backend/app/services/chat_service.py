@@ -2,8 +2,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.message import Message
+from app.services.ai_assistant_service import AIAssistantService
 from app.services.conversation_service import ConversationService
-from app.services.rag.rag_service import RAGService
 
 
 class ChatService:
@@ -24,15 +24,12 @@ class ChatService:
                 "Message cannot be empty."
             )
 
-        if top_k < 1 or top_k > 10:
-            raise ValueError(
-                "top_k must be between 1 and 10."
+        conversation = (
+            await ConversationService.get_conversation(
+                db=db,
+                conversation_id=conversation_id,
+                user_id=user_id,
             )
-
-        conversation = await ConversationService.get_conversation(
-            db=db,
-            conversation_id=conversation_id,
-            user_id=user_id,
         )
 
         if conversation is None:
@@ -71,14 +68,17 @@ class ChatService:
         db.add(user_message)
         await db.commit()
 
-        rag_result = await RAGService.answer(
-            query=query,
-            user_id=user_id,
-            conversation_history=conversation_history,
-            top_k=top_k,
+        assistant_result = (
+            await AIAssistantService.answer(
+                query=query,
+                conversation_history=conversation_history,
+            )
         )
 
-        answer = rag_result["answer"]
+        answer = assistant_result.get(
+            "answer",
+            "",
+        )
 
         assistant_message = Message(
             conversation_id=conversation.id,
@@ -95,5 +95,6 @@ class ChatService:
             ),
             "query": query,
             "answer": answer,
-            "sources": rag_result["sources"],
+            "sources": [],
+            "mode": "assistant",
         }

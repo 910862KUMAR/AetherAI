@@ -33,18 +33,15 @@ app.add_middleware(
 
 
 # ============================================================
-# Middleware
+# MIDDLEWARE
 # ============================================================
 
-# Rate limiting
 app.middleware("http")(rate_limit_middleware)
-
-# Request logging
 app.middleware("http")(logging_middleware)
 
 
 # ============================================================
-# Root & Health
+# ROOT & HEALTH
 # ============================================================
 
 @app.get("/", tags=["Root"])
@@ -69,7 +66,7 @@ async def health_check():
 
 
 # ============================================================
-# API Routes
+# API ROUTES
 # ============================================================
 
 app.include_router(

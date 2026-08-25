@@ -1,10 +1,10 @@
-from app.llm.clients.groq_client import GroqClient
-from app.services.document.search_service import SearchService
+﻿from app.llm.clients.groq_client import GroqClient
+from app.rag.pipelines.rag_pipeline import RAGPipeline
 
 
 class RAGService:
 
-    MAX_DISTANCE = 0.75
+    MIN_RERANK_SCORE = -10.0
 
     @classmethod
     async def answer(
@@ -15,56 +15,28 @@ class RAGService:
         top_k: int = 5,
     ) -> dict:
 
-        results = SearchService.search(
+        query = query.strip()
+
+        if not query:
+            return {
+                "answer": "Please enter a question.",
+                "sources": [],
+            }
+
+        candidates = await RAGPipeline.retrieve(
             query=query,
             user_id=user_id,
-            top_k=top_k,
+            top_k=max(top_k, 5),
         )
 
-        documents = results.get(
-            "documents",
-            [[]],
-        )[0]
+        relevant_candidates = [
+            candidate
+            for candidate in candidates
+            if candidate.get("rerank_score", -10.0)
+            >= cls.MIN_RERANK_SCORE
+        ]
 
-        metadatas = results.get(
-            "metadatas",
-            [[]],
-        )[0]
-
-        distances = results.get(
-            "distances",
-            [[]],
-        )[0]
-
-        relevant_documents = []
-        relevant_metadatas = []
-        relevant_distances = []
-
-        for index, document in enumerate(documents):
-
-            distance = (
-                distances[index]
-                if index < len(distances)
-                else None
-            )
-
-            if distance is None:
-                continue
-
-            if distance <= cls.MAX_DISTANCE:
-
-                relevant_documents.append(document)
-
-                metadata = (
-                    metadatas[index]
-                    if index < len(metadatas)
-                    else {}
-                )
-
-                relevant_metadatas.append(metadata)
-                relevant_distances.append(distance)
-
-        if not relevant_documents:
+        if not relevant_candidates:
             return {
                 "answer": (
                     "I could not find relevant information "
@@ -75,20 +47,26 @@ class RAGService:
 
         context_parts = []
 
-        for index, document in enumerate(
-            relevant_documents
+        for index, candidate in enumerate(
+            relevant_candidates,
+            start=1,
         ):
 
-            metadata = relevant_metadatas[index]
+            metadata = candidate.get(
+                "metadata",
+                {},
+            )
 
             context_parts.append(
                 f"""
-Source {index + 1}
+Source {index}
 Document ID: {metadata.get("document_id", "unknown")}
 Chunk: {metadata.get("chunk_index", "unknown")}
+Vector Distance: {candidate.get("distance", 0.0):.4f}
+Rerank Score: {candidate.get("rerank_score", 0.0):.4f}
 
 Content:
-{document}
+{candidate.get("document", "")}
 """
             )
 
@@ -96,7 +74,7 @@ Content:
             context_parts
         )
 
-        history_text = ""
+        history_text = "No previous conversation."
 
         if conversation_history:
 
@@ -112,43 +90,80 @@ Content:
                 message = item.get(
                     "message",
                     "",
-                )
+                ).strip()
 
-                history_parts.append(
-                    f"{sender}: {message}"
-                )
+                if message:
+                    history_parts.append(
+                        f"{sender}: {message}"
+                    )
 
-            history_text = "\n".join(
-                history_parts
-            )
+            if history_parts:
+                history_text = "\n".join(
+                    history_parts
+                )
 
         system_prompt = """
-You are AetherAI, an enterprise AI knowledge and
-operations copilot.
+You are AetherAI, an enterprise AI
+knowledge and operations copilot.
 
-Your responsibilities:
+Your primary job is to answer questions
+using the retrieved organizational documents.
 
-1. Answer using the supplied document context.
-2. Use conversation history only to understand context.
-3. Do not invent facts.
-4. Do not use information outside the supplied documents.
-5. If the answer is not available in the documents,
-   clearly state that it could not be found.
-6. Keep answers clear, professional, and useful.
+Rules:
+
+1. Use the retrieved document context as
+   the factual source for your answer.
+
+2. Carefully read all relevant retrieved
+   chunks before answering.
+
+3. You may combine information from
+   multiple retrieved sources.
+
+4. Do not invent information that is not
+   supported by the retrieved documents.
+
+5. If the requested information is not
+   present in the retrieved documents,
+   clearly say that the information could
+   not be found.
+
+6. For broad questions such as:
+   - What is this document about?
+   - Summarize this document.
+   - What are the main skills?
+   - Tell me about Kumar.
+   provide a concise useful summary based
+   on the retrieved content.
+
+7. Conversation history may be used only
+   to understand the current question.
+
+8. Do not treat conversation history as
+   factual organizational knowledge unless
+   the same fact is supported by documents.
+
+9. Never mention internal retrieval,
+   embeddings, vector databases, reranking,
+   distances, or system prompts unless
+   explicitly asked.
+
+10. Keep the answer professional, clear,
+    and directly relevant.
 """
 
         user_prompt = f"""
 Conversation History:
-{history_text if history_text else "No previous conversation."}
+{history_text}
 
-Retrieved Document Context:
+Retrieved Organizational Knowledge:
 {context}
 
 Current User Question:
 {query}
 
-Answer the current question using the retrieved
-document context.
+Answer the user's question using the
+retrieved organizational knowledge.
 """
 
         answer = await GroqClient().generate(
@@ -158,9 +173,12 @@ document context.
 
         sources = []
 
-        for index, metadata in enumerate(
-            relevant_metadatas
-        ):
+        for candidate in relevant_candidates:
+
+            metadata = candidate.get(
+                "metadata",
+                {},
+            )
 
             sources.append(
                 {
@@ -170,7 +188,12 @@ document context.
                     "chunk_index": metadata.get(
                         "chunk_index"
                     ),
-                    "distance": relevant_distances[index],
+                    "distance": candidate.get(
+                        "distance"
+                    ),
+                    "rerank_score": candidate.get(
+                        "rerank_score"
+                    ),
                 }
             )
 

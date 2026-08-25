@@ -9,15 +9,15 @@ WORKDIR /app
 
 COPY requirements.txt .
 
-# Install CPU-only PyTorch — no CUDA/NVIDIA packages
 RUN pip install --no-cache-dir \
     torch==2.12.1 \
     --index-url https://download.pytorch.org/whl/cpu
 
-# Install remaining application dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
+COPY alembic ./alembic
+COPY alembic.ini ./alembic.ini
 
 RUN mkdir -p \
     /app/uploads \

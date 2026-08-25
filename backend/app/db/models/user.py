@@ -65,6 +65,12 @@ class User(BaseModel):
         cascade="all, delete-orphan",
     )
 
+    assistant_conversations = relationship(
+        "AssistantConversation",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
     audit_logs = relationship(
         "AuditLog",
         back_populates="user",
