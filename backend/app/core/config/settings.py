@@ -1,4 +1,4 @@
-from functools import lru_cache
+﻿from functools import lru_cache
 from pathlib import Path
 from typing import List
 
@@ -21,84 +21,42 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # =====================================================
-    # APPLICATION
-    # =====================================================
-
     APP_NAME: str = "AetherAI"
     APP_VERSION: str = "1.0.0"
-    APP_DESCRIPTION: str = (
-        "Enterprise AI Knowledge & Operations Copilot"
-    )
-
+    APP_DESCRIPTION: str = "Enterprise AI Knowledge & Operations Copilot"
     API_V1_PREFIX: str = "/api/v1"
 
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
 
-    # =====================================================
-    # SERVER
-    # =====================================================
-
     HOST: str = "0.0.0.0"
     PORT: int = 8000
 
-    # =====================================================
-    # SECURITY
-    # =====================================================
-
-    SECRET_KEY: str = Field(
-        ...,
-        description="Application Secret Key",
-    )
+    SECRET_KEY: str = Field(..., description="Application Secret Key")
 
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    # =====================================================
-    # DATABASE
-    # =====================================================
-
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_DB: str
-    POSTGRES_HOST: str
+    POSTGRES_USER: str = ""
+    POSTGRES_PASSWORD: str = ""
+    POSTGRES_DB: str = ""
+    POSTGRES_HOST: str = ""
     POSTGRES_PORT: int = 5432
 
     DATABASE_URL: str
-
-    # =====================================================
-    # REDIS
-    # =====================================================
 
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
     REDIS_PASSWORD: str = ""
 
-    # =====================================================
-    # GROQ
-    # =====================================================
-
     GROQ_API_KEY: str
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
 
-    # =====================================================
-    # EMBEDDINGS
-    # =====================================================
-
     EMBEDDING_MODEL: str = "BAAI/bge-small-en-v1.5"
 
-    # =====================================================
-    # VECTOR DATABASE
-    # =====================================================
-
     VECTOR_COLLECTION: str = "aetherai_documents"
-
-    # =====================================================
-    # FILE STORAGE
-    # =====================================================
 
     UPLOAD_DIRECTORY: Path = BACKEND_DIR / "uploads"
     STORAGE_DIRECTORY: Path = BACKEND_DIR / "storage"
@@ -116,10 +74,6 @@ class Settings(BaseSettings):
         ".xlsx",
     ]
 
-    # =====================================================
-    # CORS
-    # =====================================================
-
     ALLOWED_ORIGINS: List[str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
@@ -130,36 +84,26 @@ class Settings(BaseSettings):
     ALLOWED_HEADERS: List[str] = ["*"]
     ALLOW_CREDENTIALS: bool = True
 
-    # =====================================================
-    # LOGGING
-    # =====================================================
-
     LOG_LEVEL: str = "INFO"
 
     LOG_FORMAT: str = (
         "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
     )
 
-    # =====================================================
-    # DATABASE URLS
-    # =====================================================
-
     @property
     def async_database_url(self) -> str:
-        return (
-            f"postgresql+asyncpg://"
-            f"{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}"
-            f"/{self.POSTGRES_DB}"
+        return self.DATABASE_URL.replace(
+            "postgresql://",
+            "postgresql+asyncpg://",
+            1,
         )
 
     @property
     def sync_database_url(self) -> str:
-        return (
-            f"postgresql+psycopg://"
-            f"{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}"
-            f"/{self.POSTGRES_DB}"
+        return self.DATABASE_URL.replace(
+            "postgresql://",
+            "postgresql+psycopg://",
+            1,
         )
 
     @property
