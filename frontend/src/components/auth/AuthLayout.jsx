@@ -1,4 +1,4 @@
-function AuthLayout({ children }) {
+﻿function AuthLayout({ children }) {
   return (
     <main className="min-h-screen bg-slate-950">
       <div className="flex min-h-screen">
@@ -33,7 +33,7 @@ function AuthLayout({ children }) {
             </div>
 
             <p className="text-sm text-slate-500">
-              © 2026 AetherAI. Enterprise AI Knowledge & Operations Copilot.
+              Â© 2026 AetherAI. Enterprise AI Knowledge & Operations Copilot.
             </p>
           </div>
         </section>

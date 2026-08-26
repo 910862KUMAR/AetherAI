@@ -1,4 +1,4 @@
-import api from "./axios";
+﻿import api from "./axios";
 
 const askRAG = async (query, top_k = 5) => {
   const response = await api.post("/rag/ask", {

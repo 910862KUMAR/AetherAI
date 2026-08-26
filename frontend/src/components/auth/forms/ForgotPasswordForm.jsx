@@ -1,4 +1,4 @@
-import AuthInput from "../AuthInput";
+﻿import AuthInput from "../AuthInput";
 import Button from "../../ui/Button";
 
 function ForgotPasswordForm() {

@@ -1,4 +1,4 @@
-import {
+﻿import {
   ArrowLeft,
   Bot,
   Loader2,
@@ -17,7 +17,7 @@ import { useAuth } from "../context/AuthContext";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
-  "http://localhost:8000/api/v1";
+  "http://127.0.0.1:8000/api/v1";
 
 function Chat() {
   const navigate = useNavigate();
@@ -258,8 +258,6 @@ function Chat() {
         ...previous,
         assistantMessage,
       ]);
-
-      await loadConversations();
     } catch (requestError) {
       setError(
         requestError?.message ||
@@ -747,7 +745,7 @@ function Chat() {
                                     >
                                       Source{" "}
                                       {index + 1}{" "}
-                                      · Chunk{" "}
+                                      Â· Chunk{" "}
                                       {
                                         source.chunk_index
                                       }
@@ -834,7 +832,7 @@ function Chat() {
             </div>
 
             <div className="mt-2 px-2 text-xs text-slate-600">
-              Press Enter to send · Shift + Enter
+              Press Enter to send Â· Shift + Enter
               for a new line
             </div>
           </form>
@@ -845,3 +843,5 @@ function Chat() {
 }
 
 export default Chat;
+
+

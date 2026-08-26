@@ -1,4 +1,4 @@
-import { Check, Copy } from "lucide-react";
+﻿import { Check, Copy } from "lucide-react";
 import { Children, isValidElement, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -268,3 +268,4 @@ function MarkdownMessage({ content = "" }) {
 }
 
 export default MarkdownMessage;
+

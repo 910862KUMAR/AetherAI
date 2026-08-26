@@ -1,4 +1,4 @@
-function Button({
+﻿function Button({
   children,
   type = "button",
   variant = "primary",

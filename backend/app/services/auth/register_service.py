@@ -1,4 +1,4 @@
-from sqlalchemy import select
+﻿from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.role import Role
@@ -8,7 +8,7 @@ from app.security.auth.password_handler import hash_password
 
 class RegisterService:
 
-    DEFAULT_ROLE_NAME = "USER"
+    DEFAULT_ROLE_NAME = "user"
 
     @staticmethod
     async def register(

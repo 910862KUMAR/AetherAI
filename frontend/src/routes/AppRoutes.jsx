@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+﻿import { Navigate, Route, Routes } from "react-router-dom";
 
 import Login from "../pages/Login";
 import Register from "../pages/Register";
@@ -76,7 +76,7 @@ function AppRoutes() {
         }
       />
 
-      {/* 🤖 GENERAL AI ASSISTANT */}
+      {/* ðŸ¤– GENERAL AI ASSISTANT */}
       <Route
         path="/assistant"
         element={
@@ -86,7 +86,7 @@ function AppRoutes() {
         }
       />
 
-      {/* 📚 DOCUMENT KNOWLEDGE / RAG */}
+      {/* ðŸ“š DOCUMENT KNOWLEDGE / RAG */}
       <Route
         path="/chat"
         element={
@@ -96,7 +96,7 @@ function AppRoutes() {
         }
       />
 
-      {/* 📚 KNOWLEDGE SEARCH */}
+      {/* ðŸ“š KNOWLEDGE SEARCH */}
       <Route
         path="/knowledge"
         element={
@@ -106,7 +106,7 @@ function AppRoutes() {
         }
       />
 
-      {/* 📄 DOCUMENT MANAGEMENT */}
+      {/* ðŸ“„ DOCUMENT MANAGEMENT */}
       <Route
         path="/documents"
         element={
@@ -116,7 +116,7 @@ function AppRoutes() {
         }
       />
 
-      {/* ⚙️ SETTINGS */}
+      {/* âš™ï¸ SETTINGS */}
       <Route
         path="/settings"
         element={

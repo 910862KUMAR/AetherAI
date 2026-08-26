@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -182,13 +182,13 @@ function Documents() {
 
   const formatDate = (value) => {
     if (!value) {
-      return "—";
+      return "â€”";
     }
 
     const date = new Date(value);
 
     if (Number.isNaN(date.getTime())) {
-      return "—";
+      return "â€”";
     }
 
     return date.toLocaleString();

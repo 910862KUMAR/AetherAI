@@ -1,4 +1,4 @@
-import {
+﻿import {
   Activity,
   ArrowUpRight,
   Bot,
@@ -512,7 +512,7 @@ function Dashboard() {
         <footer className="mt-10 border-t border-slate-800/80 pt-6">
           <div className="flex flex-col justify-between gap-3 text-xs text-slate-600 sm:flex-row">
             <p>
-              © 2026 AetherAI. Enterprise AI Knowledge &
+              Â© 2026 AetherAI. Enterprise AI Knowledge &
               Operations Copilot.
             </p>
 

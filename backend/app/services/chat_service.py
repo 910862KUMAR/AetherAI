@@ -1,9 +1,9 @@
-from sqlalchemy import select
+﻿from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.message import Message
-from app.services.ai_assistant_service import AIAssistantService
 from app.services.conversation_service import ConversationService
+from app.services.rag.rag_service import RAGService
 
 
 class ChatService:
@@ -20,36 +20,24 @@ class ChatService:
         query = query.strip()
 
         if not query:
-            raise ValueError(
-                "Message cannot be empty."
-            )
+            raise ValueError("Message cannot be empty.")
 
-        conversation = (
-            await ConversationService.get_conversation(
-                db=db,
-                conversation_id=conversation_id,
-                user_id=user_id,
-            )
+        conversation = await ConversationService.get_conversation(
+            db=db,
+            conversation_id=conversation_id,
+            user_id=user_id,
         )
 
         if conversation is None:
-            raise ValueError(
-                "Conversation not found."
-            )
+            raise ValueError("Conversation not found.")
 
         history_result = await db.execute(
             select(Message)
-            .where(
-                Message.conversation_id == conversation.id
-            )
-            .order_by(
-                Message.created_at.asc()
-            )
+            .where(Message.conversation_id == conversation.id)
+            .order_by(Message.created_at.asc())
         )
 
-        previous_messages = (
-            history_result.scalars().all()
-        )
+        previous_messages = history_result.scalars().all()
 
         conversation_history = [
             {
@@ -68,17 +56,15 @@ class ChatService:
         db.add(user_message)
         await db.commit()
 
-        assistant_result = (
-            await AIAssistantService.answer(
-                query=query,
-                conversation_history=conversation_history,
-            )
+        rag_result = await RAGService.answer(
+            query=query,
+            user_id=user_id,
+            conversation_history=conversation_history,
+            top_k=top_k,
         )
 
-        answer = assistant_result.get(
-            "answer",
-            "",
-        )
+        answer = rag_result.get("answer", "")
+        sources = rag_result.get("sources", [])
 
         assistant_message = Message(
             conversation_id=conversation.id,
@@ -90,11 +76,9 @@ class ChatService:
         await db.commit()
 
         return {
-            "conversation_id": str(
-                conversation.id
-            ),
+            "conversation_id": str(conversation.id),
             "query": query,
             "answer": answer,
-            "sources": [],
-            "mode": "assistant",
+            "sources": sources,
+            "mode": "rag",
         }
