@@ -1,4 +1,4 @@
-﻿from sqlalchemy import select
+﻿from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.role import Role
@@ -19,31 +19,24 @@ class RegisterService:
     ) -> User:
 
         result = await db.execute(
-            select(User).where(
-                User.email == email
-            )
+            select(User).where(User.email == email)
         )
 
         existing_user = result.scalar_one_or_none()
 
         if existing_user:
-            raise ValueError(
-                "Email already registered."
-            )
+            raise ValueError("Email already registered.")
 
         role_result = await db.execute(
             select(Role).where(
-                Role.role_name
-                == RegisterService.DEFAULT_ROLE_NAME
+                func.lower(Role.role_name) == RegisterService.DEFAULT_ROLE_NAME.lower()
             )
         )
 
         role = role_result.scalar_one_or_none()
 
         if role is None:
-            raise ValueError(
-                "Default USER role is not configured."
-            )
+            raise ValueError("Default USER role is not configured.")
 
         user = User(
             full_name=full_name,
@@ -57,7 +50,6 @@ class RegisterService:
         db.add(user)
 
         await db.commit()
-
         await db.refresh(user)
 
         return user

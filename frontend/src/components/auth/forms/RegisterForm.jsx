@@ -8,9 +8,6 @@ import {
   getApiErrorMessage,
 } from "../../../services/authService";
 
-const DEFAULT_USER_ROLE_ID =
-  import.meta.env.VITE_DEFAULT_ROLE_ID;
-
 function RegisterForm() {
   const navigate = useNavigate();
 
@@ -77,7 +74,6 @@ function RegisterForm() {
         full_name: fullName,
         email,
         password: formData.password,
-        role_id: DEFAULT_USER_ROLE_ID,
       });
 
       setSuccess(
@@ -189,4 +185,6 @@ function RegisterForm() {
 }
 
 export default RegisterForm;
+
+
 
