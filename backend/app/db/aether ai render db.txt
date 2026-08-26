@@ -1,0 +1,15 @@
+aether ai render db 
+aetherai_db_fqjx_user  username 
+xMnBY7iV6VWb3CfUDr0riFfzGrddT4sH  passwwrod 
+postgresql://aetherai_db_fqjx_user:xMnBY7iV6VWb3CfUDr0riFfzGrddT4sH@dpg-da6o1ke7bikc7396j310-a/aetherai_db_fqjx internal db 
+postgresql://aetherai_db_fqjx_user:xMnBY7iV6VWb3CfUDr0riFfzGrddT4sH@dpg-da6o1ke7bikc7396j310-a.oregon-postgres.render.com/aetherai_db_fqjx external db
+
+
+
+
+POSTGRES_HOST = dpg-da6o1ke7bikc7396j310-a
+POSTGRES_PORT = 5432
+POSTGRES_DB = aetherai_db_fqjx
+POSTGRES_USER = aetherai_db_fqjx_user
+POSTGRES_PASSWORD = <the password shown in Render>
+DATABASE_URL = <Internal Database URL shown in Render> 

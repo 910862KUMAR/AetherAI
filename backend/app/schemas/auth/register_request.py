@@ -2,7 +2,9 @@ from pydantic import BaseModel, EmailStr
 
 
 class RegisterRequest(BaseModel):
+
     full_name: str
+
     email: EmailStr
+
     password: str
-    role_id: str

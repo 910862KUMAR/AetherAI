@@ -6,6 +6,7 @@ from app.schemas.auth.register_request import RegisterRequest
 from app.schemas.auth.register_response import RegisterResponse
 from app.services.auth.register_service import RegisterService
 
+
 router = APIRouter()
 
 
@@ -18,16 +19,19 @@ async def register(
     request: RegisterRequest,
     db: AsyncSession = Depends(get_db),
 ):
+
     try:
+
         return await RegisterService.register(
             db=db,
             full_name=request.full_name,
             email=request.email,
             password=request.password,
-            role_id=request.role_id,
         )
-    except ValueError as e:
+
+    except ValueError as exc:
+
         raise HTTPException(
-            status_code=400,
-            detail=str(e),
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
         )
