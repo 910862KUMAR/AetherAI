@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthInput from "../AuthInput";
 import PasswordInput from "../PasswordInput";
@@ -9,7 +9,7 @@ import {
 } from "../../../services/authService";
 
 const DEFAULT_USER_ROLE_ID =
-  "62d09999-e663-4812-aeb0-2bf8f080e17e";
+  import.meta.env.VITE_DEFAULT_ROLE_ID;
 
 function RegisterForm() {
   const navigate = useNavigate();
