@@ -9,6 +9,7 @@
   Search,
   Settings,
   ShieldCheck,
+  LogOut,
   Sparkles,
   TrendingUp,
   Upload,
@@ -21,7 +22,7 @@ import { useAuth } from "../context/AuthContext";
 import { getDashboardStats } from "../api/dashboardApi";
 
 function Dashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const [stats, setStats] = useState({
@@ -192,6 +193,19 @@ function Dashboard() {
               aria-label="Open settings"
             >
               {user?.fullName?.charAt(0)?.toUpperCase() || "U"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                logout();
+                navigate("/login", { replace: true });
+              }}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-red-500/30 bg-red-500/10 text-red-300 transition hover:bg-red-500/20"
+              aria-label="Log out"
+              title="Log out"
+            >
+              <LogOut className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -525,3 +539,6 @@ function Dashboard() {
 }
 
 export default Dashboard;
+
+
+
