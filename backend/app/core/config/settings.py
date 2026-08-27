@@ -114,7 +114,7 @@ class Settings(BaseSettings):
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "https://aether-ai4.vercel.app",
-        "https://aether-ai4-871xx1kg9-kumar-gks-projects.vercel.app",
+        "https://aether-ai4-kumar-gks-projects.vercel.app",
     ]
 
     ALLOWED_METHODS: List[str] = ["*"]
