@@ -1,8 +1,9 @@
-from fastapi import APIRouter
+﻿from fastapi import APIRouter, Depends
+from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.dependencies.auth import CurrentUser
-from pydantic import BaseModel, Field
-
+from app.db.session.session import get_db
 from app.services.rag.rag_service import RAGService
 
 
@@ -28,9 +29,10 @@ class RAGRequest(BaseModel):
 async def ask_rag(
     request: RAGRequest,
     current_user: dict = CurrentUser,
+    db: AsyncSession = Depends(get_db),
 ):
-
     result = await RAGService.answer(
+        db=db,
         query=request.query,
         user_id=current_user["sub"],
         top_k=request.top_k,

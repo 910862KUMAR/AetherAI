@@ -1,89 +1,109 @@
-import chromadb
+﻿from typing import Any
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db.models.document_chunk import DocumentChunk
 
 
 class VectorStoreService:
 
-    COLLECTION_NAME = "aetherai_documents"
-
-    _client = None
-    _collection = None
-
-    @classmethod
-    def _get_collection(cls):
-        if cls._collection is None:
-            cls._client = chromadb.PersistentClient(
-                path="./chroma_db"
-            )
-
-            cls._collection = cls._client.get_or_create_collection(
-                name=cls.COLLECTION_NAME,
-                metadata={
-                    "hnsw:space": "cosine",
-                },
-            )
-
-        return cls._collection
-
-    @classmethod
-    def add_documents(
-        cls,
+    @staticmethod
+    async def add_documents(
+        db: AsyncSession,
         chunks: list[str],
         embeddings: list[list[float]],
         document_id: str,
         user_id: str,
-    ):
+    ) -> None:
+
         if not chunks:
             return
 
-        collection = cls._get_collection()
+        from uuid import UUID
 
-        ids = [
-            f"{document_id}_chunk_{index}"
-            for index in range(len(chunks))
-        ]
+        document_uuid = UUID(document_id)
+        user_uuid = UUID(user_id)
 
-        metadatas = [
-            {
-                "document_id": document_id,
-                "user_id": user_id,
-                "chunk_index": index,
-            }
-            for index in range(len(chunks))
-        ]
-
-        collection.add(
-            ids=ids,
-            documents=chunks,
-            embeddings=embeddings,
-            metadatas=metadatas,
+        await db.execute(
+            DocumentChunk.__table__.delete().where(
+                DocumentChunk.document_id == document_uuid
+            )
         )
 
-    @classmethod
-    def search(
-        cls,
+        for index, (chunk, embedding) in enumerate(
+            zip(chunks, embeddings)
+        ):
+            db.add(
+                DocumentChunk(
+                    document_id=document_uuid,
+                    user_id=user_uuid,
+                    chunk_index=index,
+                    content=chunk,
+                    embedding=embedding,
+                )
+            )
+
+        await db.flush()
+
+    @staticmethod
+    async def search(
+        db: AsyncSession,
         query_embedding: list[float],
         user_id: str,
         top_k: int = 5,
-    ):
-        collection = cls._get_collection()
+    ) -> list[dict[str, Any]]:
 
-        return collection.query(
-            query_embeddings=[query_embedding],
-            n_results=top_k,
-            where={
-                "user_id": user_id,
-            },
+        if not query_embedding:
+            return []
+
+        from uuid import UUID
+
+        user_uuid = UUID(user_id)
+
+        distance = DocumentChunk.embedding.cosine_distance(
+            query_embedding
         )
 
-    @classmethod
-    def delete_document(
-        cls,
-        document_id: str,
-    ):
-        collection = cls._get_collection()
+        result = await db.execute(
+            select(
+                DocumentChunk,
+                distance.label("distance"),
+            )
+            .where(
+                DocumentChunk.user_id == user_uuid,
+            )
+            .order_by(distance)
+            .limit(top_k)
+        )
 
-        collection.delete(
-            where={
-                "document_id": document_id,
+        rows = result.all()
+
+        return [
+            {
+                "document": chunk.content,
+                "metadata": {
+                    "document_id": str(chunk.document_id),
+                    "user_id": str(chunk.user_id),
+                    "chunk_index": chunk.chunk_index,
+                },
+                "distance": float(distance_value),
             }
+            for chunk, distance_value in rows
+        ]
+
+    @staticmethod
+    async def delete_document(
+        db: AsyncSession,
+        document_id: str,
+    ) -> None:
+
+        from uuid import UUID
+
+        await db.execute(
+            DocumentChunk.__table__.delete().where(
+                DocumentChunk.document_id == UUID(document_id)
+            )
         )
+
+        await db.flush()

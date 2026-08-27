@@ -1,7 +1,7 @@
-from logging.config import fileConfig
+﻿from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import engine_from_config
+from sqlalchemy import create_engine
 from sqlalchemy import pool
 
 from app.core.config.settings import settings
@@ -10,6 +10,7 @@ from app.db.base.base import Base
 from app.db.models.user import User
 from app.db.models.role import Role
 from app.db.models.document import Document
+from app.db.models.document_chunk import DocumentChunk
 from app.db.models.conversation import Conversation
 from app.db.models.message import Message
 from app.db.models.assistant_conversation import AssistantConversation
@@ -21,9 +22,18 @@ config = context.config
 
 configured_database_url = context.get_x_argument(
     as_dictionary=True
-).get(
-    "db_url",
-    settings.sync_database_url,
+).get("db_url", settings.sync_database_url)
+
+# Alembic uses synchronous SQLAlchemy.
+# Force PostgreSQL to use psycopg2 instead of asyncpg.
+configured_database_url = configured_database_url.replace(
+    "postgresql+asyncpg://",
+    "postgresql+psycopg2://",
+)
+
+configured_database_url = configured_database_url.replace(
+    "postgresql://",
+    "postgresql+psycopg2://",
 )
 
 config.set_main_option(
@@ -54,12 +64,12 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    connectable = engine_from_config(
-        config.get_section(
-            config.config_ini_section,
-            {},
-        ),
-        prefix="sqlalchemy.",
+    database_url = config.get_main_option(
+        "sqlalchemy.url"
+    )
+
+    connectable = create_engine(
+        database_url,
         poolclass=pool.NullPool,
     )
 

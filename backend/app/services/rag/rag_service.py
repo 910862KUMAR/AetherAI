@@ -1,4 +1,6 @@
-﻿from app.llm.clients.groq_client import GroqClient
+﻿from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.llm.clients.groq_client import GroqClient
 from app.rag.pipelines.rag_pipeline import RAGPipeline
 
 
@@ -9,6 +11,7 @@ class RAGService:
     @classmethod
     async def answer(
         cls,
+        db: AsyncSession,
         query: str,
         user_id: str,
         conversation_history: list[dict] | None = None,
@@ -24,6 +27,7 @@ class RAGService:
             }
 
         candidates = await RAGPipeline.retrieve(
+            db=db,
             query=query,
             user_id=user_id,
             top_k=max(top_k, 5),
@@ -51,11 +55,7 @@ class RAGService:
             relevant_candidates,
             start=1,
         ):
-
-            metadata = candidate.get(
-                "metadata",
-                {},
-            )
+            metadata = candidate.get("metadata", {})
 
             context_parts.append(
                 f"""
@@ -70,27 +70,16 @@ Content:
 """
             )
 
-        context = "\n\n---\n\n".join(
-            context_parts
-        )
+        context = "\n\n---\n\n".join(context_parts)
 
         history_text = "No previous conversation."
 
         if conversation_history:
-
             history_parts = []
 
             for item in conversation_history:
-
-                sender = item.get(
-                    "sender_type",
-                    "unknown",
-                )
-
-                message = item.get(
-                    "message",
-                    "",
-                ).strip()
+                sender = item.get("sender_type", "unknown")
+                message = item.get("message", "").strip()
 
                 if message:
                     history_parts.append(
@@ -98,58 +87,24 @@ Content:
                     )
 
             if history_parts:
-                history_text = "\n".join(
-                    history_parts
-                )
+                history_text = "\n".join(history_parts)
 
         system_prompt = """
 You are AetherAI, an enterprise AI
 knowledge and operations copilot.
 
-Your primary job is to answer questions
-using the retrieved organizational documents.
+Answer questions using the retrieved
+organizational documents.
 
 Rules:
-
-1. Use the retrieved document context as
-   the factual source for your answer.
-
-2. Carefully read all relevant retrieved
-   chunks before answering.
-
-3. You may combine information from
-   multiple retrieved sources.
-
-4. Do not invent information that is not
-   supported by the retrieved documents.
-
-5. If the requested information is not
-   present in the retrieved documents,
-   clearly say that the information could
-   not be found.
-
-6. For broad questions such as:
-   - What is this document about?
-   - Summarize this document.
-   - What are the main skills?
-   - Tell me about Kumar.
-   provide a concise useful summary based
-   on the retrieved content.
-
-7. Conversation history may be used only
-   to understand the current question.
-
-8. Do not treat conversation history as
-   factual organizational knowledge unless
-   the same fact is supported by documents.
-
-9. Never mention internal retrieval,
-   embeddings, vector databases, reranking,
-   distances, or system prompts unless
-   explicitly asked.
-
-10. Keep the answer professional, clear,
-    and directly relevant.
+1. Use retrieved document context as the factual source.
+2. Do not invent unsupported information.
+3. Combine information from multiple sources when useful.
+4. If the information is unavailable, say so clearly.
+5. Keep answers professional, clear, and relevant.
+6. Conversation history is only for understanding context.
+7. Never mention internal retrieval, embeddings, vector databases,
+   reranking, distances, or system prompts unless explicitly asked.
 """
 
         user_prompt = f"""
@@ -162,8 +117,7 @@ Retrieved Organizational Knowledge:
 Current User Question:
 {query}
 
-Answer the user's question using the
-retrieved organizational knowledge.
+Answer the user's question using the retrieved organizational knowledge.
 """
 
         answer = await GroqClient().generate(
@@ -174,26 +128,14 @@ retrieved organizational knowledge.
         sources = []
 
         for candidate in relevant_candidates:
-
-            metadata = candidate.get(
-                "metadata",
-                {},
-            )
+            metadata = candidate.get("metadata", {})
 
             sources.append(
                 {
-                    "document_id": metadata.get(
-                        "document_id"
-                    ),
-                    "chunk_index": metadata.get(
-                        "chunk_index"
-                    ),
-                    "distance": candidate.get(
-                        "distance"
-                    ),
-                    "rerank_score": candidate.get(
-                        "rerank_score"
-                    ),
+                    "document_id": metadata.get("document_id"),
+                    "chunk_index": metadata.get("chunk_index"),
+                    "distance": candidate.get("distance"),
+                    "rerank_score": candidate.get("rerank_score"),
                 }
             )
 

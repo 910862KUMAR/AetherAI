@@ -1,13 +1,13 @@
-from pathlib import Path
+﻿from pathlib import Path
 from uuid import UUID
 
 import pymupdf
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.document import Document
+from app.db.models.document_chunk import DocumentChunk
 from app.services.document.chunking_service import ChunkingService
 from app.services.document.embedding_service import EmbeddingService
-from app.services.document.vector_store_service import VectorStoreService
 
 
 class DocumentProcessingService:
@@ -29,7 +29,6 @@ class DocumentProcessingService:
             return
 
         try:
-
             pdf = pymupdf.open(file_path)
 
             text = ""
@@ -42,28 +41,40 @@ class DocumentProcessingService:
             chunks = ChunkingService.chunk_text(text)
 
             if chunks:
+                embeddings = EmbeddingService.generate_embeddings(
+                    chunks
+                )
 
-                embeddings = (
-                    EmbeddingService.generate_embeddings(
-                        chunks
+                await db.execute(
+                    DocumentChunk.__table__.delete().where(
+                        DocumentChunk.document_id == UUID(document_id)
                     )
                 )
 
-                VectorStoreService.add_documents(
-                    chunks=chunks,
-                    embeddings=embeddings,
-                    document_id=document_id,
-                    user_id=user_id,
-                )
+                for index, (chunk, embedding) in enumerate(
+                    zip(chunks, embeddings)
+                ):
+                    db.add(
+                        DocumentChunk(
+                            document_id=UUID(document_id),
+                            user_id=UUID(user_id),
+                            chunk_index=index,
+                            content=chunk,
+                            embedding=embedding,
+                        )
+                    )
 
             document.is_processed = True
 
             await db.commit()
 
         except Exception:
-
             document.is_processed = False
-
             await db.commit()
-
             raise
+
+        finally:
+            local_file = Path(file_path)
+
+            if local_file.exists():
+                local_file.unlink()
