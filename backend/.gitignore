@@ -1,4 +1,4 @@
-@"
+﻿@"
 # Python
 __pycache__/
 *.py[cod]
@@ -27,7 +27,7 @@ chroma_db/
 
 # Runtime data
 uploads/
-storage/
+/storage/
 artifacts/
 logs/
 

@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 from uuid import UUID
 
 import pymupdf
@@ -8,9 +8,14 @@ from app.db.models.document import Document
 from app.services.document.chunking_service import ChunkingService
 from app.services.document.embedding_service import EmbeddingService
 from app.services.document.vector_store_service import VectorStoreService
+from app.services.storage.supabase_storage_service import (
+    SupabaseStorageService,
+)
 
 
 class DocumentProcessingService:
+
+    TEMP_DIR = Path("uploads/temp")
 
     @staticmethod
     async def process_document(
@@ -28,9 +33,19 @@ class DocumentProcessingService:
         if document is None:
             return
 
+        local_file = (
+            DocumentProcessingService.TEMP_DIR
+            / Path(file_path).name
+        )
+
         try:
 
-            pdf = pymupdf.open(file_path)
+            await SupabaseStorageService.download_file(
+                storage_path=file_path,
+                destination_path=str(local_file),
+            )
+
+            pdf = pymupdf.open(str(local_file))
 
             text = ""
 
@@ -47,6 +62,10 @@ class DocumentProcessingService:
                     EmbeddingService.generate_embeddings(
                         chunks
                     )
+                )
+
+                VectorStoreService.delete_document(
+                    document_id=document_id,
                 )
 
                 VectorStoreService.add_documents(
@@ -67,3 +86,8 @@ class DocumentProcessingService:
             await db.commit()
 
             raise
+
+        finally:
+
+            if local_file.exists():
+                local_file.unlink()

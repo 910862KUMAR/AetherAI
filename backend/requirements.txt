@@ -51,3 +51,5 @@ groq
 
 openai==1.109.1
 ragas==0.4.3
+
+httpx==0.28.1

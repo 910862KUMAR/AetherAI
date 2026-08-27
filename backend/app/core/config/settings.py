@@ -5,6 +5,7 @@ from typing import List
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 BASE_DIR = Path(__file__).resolve().parents[4]
 BACKEND_DIR = BASE_DIR / "backend"
 
@@ -32,7 +33,10 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8000
 
-    SECRET_KEY: str = Field(..., description="Application Secret Key")
+    SECRET_KEY: str = Field(
+        ...,
+        description="Application Secret Key",
+    )
 
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
@@ -46,22 +50,50 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str
 
+    # ============================================================
+    # SUPABASE STORAGE
+    # ============================================================
+
+    SUPABASE_URL: str
+    SUPABASE_SECRET_KEY: str
+    SUPABASE_STORAGE_BUCKET: str = "documents"
+
+    # ============================================================
+    # REDIS
+    # ============================================================
+
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
     REDIS_PASSWORD: str = ""
 
+    # ============================================================
+    # GROQ
+    # ============================================================
+
     GROQ_API_KEY: str
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
+
+    # ============================================================
+    # EMBEDDINGS / VECTOR STORE
+    # ============================================================
 
     EMBEDDING_MODEL: str = "BAAI/bge-small-en-v1.5"
 
     VECTOR_COLLECTION: str = "aetherai_documents"
 
+    # ============================================================
+    # DIRECTORIES
+    # ============================================================
+
     UPLOAD_DIRECTORY: Path = BACKEND_DIR / "uploads"
     STORAGE_DIRECTORY: Path = BACKEND_DIR / "storage"
     ARTIFACT_DIRECTORY: Path = BACKEND_DIR / "artifacts"
     LOG_DIRECTORY: Path = BACKEND_DIR / "logs"
+
+    # ============================================================
+    # FILE UPLOAD
+    # ============================================================
 
     MAX_UPLOAD_SIZE: int = 50 * 1024 * 1024
 
@@ -74,6 +106,10 @@ class Settings(BaseSettings):
         ".xlsx",
     ]
 
+    # ============================================================
+    # CORS
+    # ============================================================
+
     ALLOWED_ORIGINS: List[str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
@@ -85,11 +121,19 @@ class Settings(BaseSettings):
     ALLOWED_HEADERS: List[str] = ["*"]
     ALLOW_CREDENTIALS: bool = True
 
+    # ============================================================
+    # LOGGING
+    # ============================================================
+
     LOG_LEVEL: str = "INFO"
 
     LOG_FORMAT: str = (
         "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
     )
+
+    # ============================================================
+    # DATABASE URL HELPERS
+    # ============================================================
 
     @property
     def async_database_url(self) -> str:
@@ -106,6 +150,10 @@ class Settings(BaseSettings):
             "postgresql+psycopg://",
             1,
         )
+
+    # ============================================================
+    # REDIS URL
+    # ============================================================
 
     @property
     def redis_url(self) -> str:
@@ -125,13 +173,27 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     settings = Settings()
 
-    settings.UPLOAD_DIRECTORY.mkdir(parents=True, exist_ok=True)
-    settings.STORAGE_DIRECTORY.mkdir(parents=True, exist_ok=True)
-    settings.ARTIFACT_DIRECTORY.mkdir(parents=True, exist_ok=True)
-    settings.LOG_DIRECTORY.mkdir(parents=True, exist_ok=True)
+    settings.UPLOAD_DIRECTORY.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    settings.STORAGE_DIRECTORY.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    settings.ARTIFACT_DIRECTORY.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    settings.LOG_DIRECTORY.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
     return settings
 
 
 settings = get_settings()
-
