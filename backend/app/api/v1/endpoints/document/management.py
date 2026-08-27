@@ -1,4 +1,5 @@
-﻿from uuid import UUID
+from pathlib import Path
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -8,9 +9,6 @@ from app.api.v1.dependencies.auth import CurrentUser
 from app.db.models.document import Document
 from app.db.session.session import get_db
 from app.services.document.vector_store_service import VectorStoreService
-from app.services.storage.supabase_storage_service import (
-    SupabaseStorageService,
-)
 
 
 router = APIRouter()
@@ -118,30 +116,22 @@ async def delete_document(
             detail="Document not found.",
         )
 
-    document_id_str = str(document.id)
-    storage_path = document.file_path
+    file_path = Path(document.file_path)
 
+    # Remove document chunks from ChromaDB.
     VectorStoreService.delete_document(
-        document_id=document_id_str,
+        document_id=str(document.id),
     )
 
-    try:
-        await SupabaseStorageService.delete_file(
-            storage_path=storage_path,
-        )
-    except Exception as exc:
-        raise HTTPException(
-            status_code=502,
-            detail=(
-                "Document could not be removed from "
-                f"storage: {exc}"
-            ),
-        )
-
+    # Remove database record.
     await db.delete(document)
     await db.commit()
 
+    # Remove physical file.
+    if file_path.exists():
+        file_path.unlink()
+
     return {
         "message": "Document deleted successfully.",
-        "document_id": document_id_str,
+        "document_id": str(document.id),
     }
