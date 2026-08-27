@@ -20,24 +20,25 @@ app = FastAPI(
 
 
 # ============================================================
+# MIDDLEWARE
+# ============================================================
+
+app.middleware("http")(rate_limit_middleware)
+app.middleware("http")(logging_middleware)
+
+
+# ============================================================
 # CORS
 # ============================================================
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
+    allow_origin_regex=r"^https://aether-ai4(?:-[a-zA-Z0-9-]+)?\.vercel\.app$",
     allow_credentials=settings.ALLOW_CREDENTIALS,
     allow_methods=settings.ALLOWED_METHODS,
     allow_headers=settings.ALLOWED_HEADERS,
 )
-
-
-# ============================================================
-# MIDDLEWARE
-# ============================================================
-
-app.middleware("http")(rate_limit_middleware)
-app.middleware("http")(logging_middleware)
 
 
 # ============================================================
