@@ -57,6 +57,7 @@ class ChatService:
         await db.commit()
 
         rag_result = await RAGService.answer(
+            db=db,
             query=query,
             user_id=user_id,
             conversation_history=conversation_history,
@@ -82,3 +83,4 @@ class ChatService:
             "sources": sources,
             "mode": "rag",
         }
+
